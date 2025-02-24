@@ -9,12 +9,17 @@ Created on Mon Feb 24 10:35:46 2025
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import os
 
 # Setting directory structure
 HISTORICAL_PRICE_DATA_DIR = r"C:\Users\EvandroDresch\Downloads\cQuant\input\historicalPriceData\\"
 SUPPLEMENTAL_MATERIALS_DATA_DIR = r"C:\Users\EvandroDresch\Downloads\cQuant\input\supplementalMaterials\\"
 OUTPUT_DIR = r"C:\Users\EvandroDresch\Downloads\cQuant\output\\"
+
+# Other general definitions
+# Date formatter for the graphs later on
+date_formatter = mdates.DateFormatter('%b-%y')
 
 ###############################################################################
 # TASK 1: Reading all the historical data and combining into a dataframe
@@ -222,17 +227,58 @@ print('------------------------------------------------------------------------'
 
 ###############################################################################
 # BONUS - MEAN PLOTS
+# Generate two line plots that display the monthly average prices you computed
+# in task 2 in cronological order (grouped_historical_data)
 
+# Create a function to generate and save a simple line plot for average price
+# of a data frame
+def create_line_plot(df, output_path, data_type):
+    
+    fig, ax = plt.subplots()
+    
+    # Loop through the settlement points and add to plot
+    for sp, group in df.groupby('SettlementPoint'):
+        ax.plot(group['Date'], group['AveragePrice'], label=sp)
+    
+    # Labels and graph info
+    ax.set_xlabel('Month')
+    
+    # Format dates to save space
+    ax.xaxis.set_major_formatter(date_formatter)
+    
+    # Rotate the labels in the x axis
+    plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+    
+    # Remaining labels
+    ax.set_ylabel('Average Price')
+    ax.set_title(f'Average Prices for {data_type}')
+    ax.legend(title=data_type)
+    
+    # Save the plot
+    plt.savefig(output_path)
+    
 
+# Get data for plot 1 (Settlement Hubs)
+mask = grouped_historical_data['SettlementPoint'].str.startswith('HB')
+plot1_data = grouped_historical_data[mask].copy()
+plot1_data['Date'] = pd.to_datetime(plot1_data['Period'])
 
+# Generate plot 1
+output_plot1 = OUTPUT_DIR + "SettlementHubAveragePriceByMonth.png"
+create_line_plot(plot1_data, output_plot1, "Settlement Hubs")
 
+# Get data for plot 2 (Settlement Hubs)
+mask = grouped_historical_data['SettlementPoint'].str.startswith('LZ')
+plot1_data = grouped_historical_data[mask].copy()
+plot1_data['Date'] = pd.to_datetime(plot1_data['Period'])
 
+# Generate plot 1
+output_plot1 = OUTPUT_DIR + "LoadZoneAveragePriceByMonth.png"
+create_line_plot(plot1_data, output_plot1, "Load Zones")
 
-
-
-
-
-
+# BONUS ANSWER: The plots were created
+print('BONUS TASK 1 ANSWER: Both plots were generated and saved to output')
+print('------------------------------------------------------------------------')
 
 
 
