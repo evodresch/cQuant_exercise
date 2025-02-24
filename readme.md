@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb 24 10:39:12 2025
+# Readme
 
-@author: EvandroDresch
-"""
+## Coding Exercise for Position Energy Analyst II - Evandro Dresch
 
