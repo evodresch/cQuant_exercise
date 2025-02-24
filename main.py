@@ -1,0 +1,6 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 24 10:35:46 2025
+
+@author: EvandroDresch
+"""
