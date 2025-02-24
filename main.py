@@ -226,7 +226,7 @@ print('TASK 7 ANSWER: Translated csv files saved in folder "formattedSpotHistory
 print('------------------------------------------------------------------------')
 
 ###############################################################################
-# BONUS - MEAN PLOTS
+# BONUS 1 - MEAN PLOTS
 # Generate two line plots that display the monthly average prices you computed
 # in task 2 in cronological order (grouped_historical_data)
 
@@ -276,9 +276,145 @@ plot1_data['Date'] = pd.to_datetime(plot1_data['Period'])
 output_plot1 = OUTPUT_DIR + "LoadZoneAveragePriceByMonth.png"
 create_line_plot(plot1_data, output_plot1, "Load Zones")
 
-# BONUS ANSWER: The plots were created
+# BONUS 1 ANSWER: The plots were created
 print('BONUS TASK 1 ANSWER: Both plots were generated and saved to output')
 print('------------------------------------------------------------------------')
+
+
+###############################################################################
+# BONUS 2 - VOLATILITY PLOTS
+# Create plots that compare volatility across settlement hubs from task 4
+# hub_price_vol
+
+# Plot 1: Box plot of hourly volatility for each settlement hubs
+
+# Group data according to the settlement hubs
+grouped_price_vol_hubs = [group['HourlyVolatility'].values for _, group in \
+                          hub_price_vol.groupby('SettlementPoint')]
+# Get names of hubs for the box plots
+labels = [hub for hub, _ in hub_price_vol.groupby('SettlementPoint')]
+
+fig, ax = plt.subplots()
+ax.boxplot(grouped_price_vol_hubs, labels=labels)
+
+ax.set_title('Hourly Volatility of Price for each Settlement Hub \n 2016-2019')
+ax.set_xlabel('Settlement Hub')
+ax.set_ylabel('Hourly Volatility')
+
+# Rotate the labels in the x axis
+plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+output_plot3 = OUTPUT_DIR + "BoxPlotHourlyVolSettlementHubs.png"
+plt.savefig(output_plot3)
+
+# PLot 2: Box plot of hourly volatility for each year
+# Group data according to the settlement hubs
+grouped_price_vol_hubs = [group['HourlyVolatility'].values for _, group in \
+                          hub_price_vol.groupby('Year')]
+# Get names of hubs for the box plots
+labels = [hub for hub, _ in hub_price_vol.groupby('Year')]
+
+fig, ax = plt.subplots()
+ax.boxplot(grouped_price_vol_hubs, labels=labels)
+
+ax.set_title('Hourly Volatility of Price for each year')
+ax.set_xlabel('Year')
+ax.set_ylabel('Hourly Volatility')
+
+# Rotate the labels in the x axis
+plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+output_plot4 = OUTPUT_DIR + "BoxPlotHourlyVolYears.png"
+plt.savefig(output_plot4)
+
+# BONUS 2 ANSWER: Box plots were created to analyse the volatility of both 
+# SettlementHubs throughout the whole period and also for the years for all
+# hubs
+print('BONUS TASK 2 ANSWER: Two boxplots were generated and saved to output')
+print('Short analysis of box plots:')
+print('Settlement Hub "HB_WEST" showed the highest volatility throughout the years')
+print('Settlement Hub "HB_PAN" was added only in 2019 and with a very high volatility, significantly above HB_WEST')
+print('2019 showed the highest volatility throughout the settlement hubs, with a significant outlier (HB PAN)')
+print('------------------------------------------------------------------------')
+
+###############################################################################
+# BONUS 3 - HOURLY SHAPE PROFILE COMPUTATION
+# Compute hourly shape profile for the settlement points
+
+# Read the files from the formattedSpotHistory and add to a dictionary of dataframes
+formatted_spot = {}
+files_formatted = [f for f in os.listdir(OUTPUT_DIR + "/formattedSpotHistory/") if f.endswith('csv')]
+
+for file in files_formatted:
+    file_path = OUTPUT_DIR + "/formattedSpotHistory/" + file
+    settlement_point = file.split('spot_')[1].split('.')[0]
+    
+    formatted_spot[settlement_point] = pd.read_csv(file_path, index_col='Variable', parse_dates=True)
+    
+    
+for settlement_point in formatted_spot.keys():
+    
+    # Get dataframe from dictionary
+    df = formatted_spot[settlement_point]
+    
+    # Create a result empty data frame
+    hourly_shape_df = pd.DataFrame()
+    
+    # Add a variable for the day of the week
+    df['Date'] = pd.to_datetime((df['Date']))
+    df['DayOfWeek'] = df['Date'].dt.dayofweek + 1
+    
+    # Add a variable for the month
+    df['Month'] = df['Date'].dt.month
+    
+    # Create a new variable for the combination day of week and year
+    df['DayOfWeek_Month'] = df['DayOfWeek'].astype(str).str.zfill(2) + '_' \
+        + df['Month'].astype(str).str.zfill(2)
+
+    # Group the data frame by this new variable to calculate hourly shape profile
+    grouped_df = df.groupby('DayOfWeek_Month')
+
+    for g, group in grouped_df:
+        
+        # Get only data from the hours
+        calc_df = group[[c for c in group.columns if c.startswith('X')]]
+        
+        # Calculate the average value for each hour for all dates
+        hour_means = calc_df.mean(axis=0, numeric_only=True)
+        
+        # Normalize the 24 values to the mean of all hour means
+        normalized_hourly_shape = pd.DataFrame(hour_means / hour_means.mean())
+        # Convert to a data frame, transpose and add the DayOfWeek_Month as an index
+        normalized_hourly_shape.columns = [g]
+        normalized_hourly_shape = normalized_hourly_shape.T
+        
+        # Add to results data frame
+        hourly_shape_df = pd.concat([hourly_shape_df, normalized_hourly_shape])
+        
+        # Add index name
+        hourly_shape_df.index.name = 'DayOfWeek_Month'
+        
+        # Save the hourly shape profiles to csv
+        output_path_bonus3 = OUTPUT_DIR + "hourlyShapeProfiles\\" + f"profile_{settlement_point}.csv"
+        hourly_shape_df.to_csv(output_path_bonus3)
+        
+# BONUS 3 ANSWER: Hourly Shape Profiles generated
+print('BONUS TASK 3 ANSWER: Hourly Shape Profiles were generated and saved to output')
+print('------------------------------------------------------------------------')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
