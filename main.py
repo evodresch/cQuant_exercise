@@ -165,14 +165,63 @@ print('------------------------------------------------------------------------'
 # consumed by the cQuant price simulation models
 # Write the data to separate files for each settlement point
 
+# Create a formula to format the grouped dataframes
+def translate_format_data(df, settlement_point):
+    # Translates and formats a dataframe from a long format to a wide format
+    # according to the format of cQuant price simulation models
+  
+    # Create a column for each hour of the day, correct 0 to 1 (midnight)
+    df['Hour'] = df.index.hour
+    
+    # Add "X" to hour column
+    df['Hour'] = "X" + df['Hour'].astype(str).str.zfill(2)
+    
+    # Replace X0 by X24 (midnight)
+    df['Hour'] = df['Hour'].str.replace('X00', 'X24')
+    
+    # Get the date only (no hour values)
+    df['DateOnly'] = df.index.date
+    
+    # Create a wide dataframe
+    df = df.pivot(columns='Hour', index='DateOnly', values='Price')
+    df = df.reset_index()
+    
+    # Add settlement point to data frame
+    df['Variable'] = settlement_point
+    
+    # Rename date column
+    df = df.rename(columns={'DateOnly': 'Date'})
+    
+    # Sort columns
+    df = df[sorted(df.columns)]
+    df = df.set_index('Variable')
+    
+    # Remove 0 placeholder
+    df.columns = [c.replace('X0', 'X') for c in df.columns]
+    
+    # Return translated dataframe
+    return df
 
+# Loop over the settlement points and create the output files
+for settlement_point in historical_price_data_df['SettlementPoint'].unique():
+    
+    # Get the data
+    mask = historical_price_data_df['SettlementPoint'] == settlement_point
+    df = historical_price_data_df[mask].copy()
+    
+    # Translate the data for the settlement point
+    translated_data = translate_format_data(df, settlement_point)
+    
+    # Save to csv
+    output_path_task7 = OUTPUT_DIR + "formattedSpotHistory\\" + f"spot_{settlement_point}.csv"
+    translated_data.to_csv(output_path_task7)
 
+# TASK 7 ANSWER: The data were translated and the files created in the folder
+print('TASK 7 ANSWER: Translated csv files saved in folder "formattedSpotHistory"')
+print('------------------------------------------------------------------------')
 
-
-
-
-
-
+###############################################################################
+# BONUS - MEAN PLOTS
 
 
 
